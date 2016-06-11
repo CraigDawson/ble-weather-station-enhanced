@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1,
+         user-scalable=no, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>BLE Weather</title>
+    </head>
+    <body>
+        <h2>BLE Weather</h2>
+        <div id="mainPage">
+            <ul id="deviceList">
+            </ul>
+            <button id="refreshButton">Refresh</button>
+        </div>
+        <div id="detailPage">
+            <p>Temperature</p>
+            <div id="temperatureDiv">
+                Unknown
+            </div>
+            <p>Humidity</p>
+            <div id="humidityDiv">
+                Unknown
+            </div>
+            <p>Station Pressure</p>
+            <div id="stationPressureDiv">
+                Unknown
+            </div>
+            <p>Sea Level Pressure</p>
+            <div id="seaLevelPressureDiv">
+                Unknown
+            </div>
+            <button id="disconnectButton">Disconnect</button>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>
