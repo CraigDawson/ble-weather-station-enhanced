@@ -1,5 +1,7 @@
-# ble-weather-station-enhanced
+434# ble-weather-station-enhanced
 Make: Bluetooth book's BLE Weather Station with enhancements
+
+![alt text](https://raw.githubusercontent.com/CraigDawson/ble-weather-station-enhanced/master/documentation/IMG_4110.jpg)
 
 ## Introduction
 
