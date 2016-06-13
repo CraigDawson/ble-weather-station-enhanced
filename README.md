@@ -40,7 +40,7 @@ There are two improvements done to the original *BLE Weather Station* from the *
 
 **Note: The RGB LED board is all that is needed and an UNO (the one above or this one)**
 
-  * RGB component * It is a board with an RBG LED, limiting resistors, and pins. You could use the descrete components instead. *
+  * RGB component *It is a board with an RBG LED, limiting resistors, and pins. You could use the discrete components instead.*
   * Kit does include a UNO board
 
 
