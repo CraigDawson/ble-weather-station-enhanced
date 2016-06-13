@@ -16,34 +16,34 @@ There are two improvements done to the original *BLE Weather Station* from the *
 
 ## References:
 
-** Book: **
+**Book:**
 
   * [Make: Bluetooth: Bluetooth LE Projects with Arduino, Raspberry Pi, and Smartphones](https://www.amazon.com/gp/product/1457187094/ref=oh_aui_search_detailpage?ie=UTF8&psc=1)
 
 
-** Hardware: **
+**Hardware:**
 
   * [SainSmart UNO](https://www.amazon.com/gp/product/B006GX8IAY/ref=oh_aui_search_detailpage?ie=UTF8&psc=1)
 
   * [Prototype shield](https://www.amazon.com/gp/product/B00Q9YB7PI/ref=oh_aui_detailpage_o09_s00?ie=UTF8&psc=1)
 
 
-** Kit 1: **   [Make:Bluetooth Book Parts Pack](https://www.adafruit.com/products/3026)
+**Kit 1:**   [Make:Bluetooth Book Parts Pack](https://www.adafruit.com/products/3026)
 
-** Note: these are the only components needed from kit 1 **
+**Note: these are the only components needed from kit 1**
 
   * [nRF8001 Breakout](https://www.adafruit.com/product/1697)
   * [BME280 sensor](https://www.adafruit.com/product/2652)
 
 
-** Kit 2: **  [SainSmart New Basic Starter Kit for Arduino](https://www.amazon.com/gp/product/B00UV7KAPM/ref=oh_aui_search_detailpage?ie=UTF8&psc=1)
+**Kit 2:**  [SainSmart New Basic Starter Kit for Arduino](https://www.amazon.com/gp/product/B00UV7KAPM/ref=oh_aui_search_detailpage?ie=UTF8&psc=1)
 
-** Note: The RGB LED board is all that is needed and an UNO (the one above or this one) **
+**Note: The RGB LED board is all that is needed and an UNO (the one above or this one)**
 
   * RGB component * It is a board with an RBG LED, limiting resistors, and pins. You could use the descrete components instead. *
   * Kit does include a UNO board
 
 
-** Original Book Code: **
+**Original Book Code:**
 
   * [Make: Bluetooth ble-weather code from book](https://github.com/MakeBluetooth/ble-weather)
