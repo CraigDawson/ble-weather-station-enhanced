@@ -16,6 +16,10 @@ There are two improvements done to the original *BLE Weather Station* from the *
 ## New LED Wiring
 Below is how you wire the tri-colored LED.
 ![alt text](https://raw.githubusercontent.com/CraigDawson/ble-weather-station-enhanced/master/arduino/Added_LED_bb.png)
+
+## Example plot of CSV output file
+![alt text](https://raw.githubusercontent.com/CraigDawson/ble-weather-station-enhanced/master/documentation/excel_chart.png)
+
 ## References:
 
 **Book:**
