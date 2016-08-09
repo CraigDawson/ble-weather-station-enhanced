@@ -53,3 +53,4 @@ Below is how you wire the tri-colored LED.
 **Original Book Code:**
 
   * [Make: Bluetooth ble-weather code from book](https://github.com/MakeBluetooth/ble-weather)
+  * [BLE-Weather-Station-High_level_diagram.pdf] (forward looking diagram)

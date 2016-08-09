@@ -10,8 +10,8 @@ import time
 version = 0.9
 runningMeanLen = 1000
 # serialPort = 'COM3:'  # Windows 10
-# serialPort = '/dev/cu.usbmodem1421'  # OS X El Capt.
-serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
+serialPort = '/dev/cu.usbmodem1421'  # OS X El Capt.
+# serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
 
 
 class CircularBuffer(deque):
@@ -110,7 +110,7 @@ while True:
         h = float(data[2])
         kpa = float(data[3]) / 1000.0
         hg = float(data[4])
-    except ValueError:
+    except (ValueError, IndexError):
         continue
 
     # mean calculations
