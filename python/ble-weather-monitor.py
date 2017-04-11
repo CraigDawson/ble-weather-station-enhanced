@@ -5,13 +5,16 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 import math
 import time
+from termcolor import cprint
 
 
-version = 0.9
+version = 0.96
 runningMeanLen = 1000
 # serialPort = 'COM3:'  # Windows 10
-serialPort = '/dev/cu.usbmodem1421'  # OS X El Capt.
-# serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
+# serialPort = '/dev/cu.usbmodem1421'  # OS X El Capt.
+serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
+
+pcolor = lambda color, arg: cprint(arg, color, attrs=['reverse'])
 
 
 class CircularBuffer(deque):
@@ -83,7 +86,7 @@ hg_cb = CircularBuffer(size=runningMeanLen)
 i = 2
 while i > 0:
     i -= 1
-    print(ser.readline())  # get rid of header +/-
+    pcolor('cyan', ser.readline())  # get rid of header +/-
 
 hg_delta = 0.0
 hg_last = 0.0
@@ -173,6 +176,8 @@ while True:
         hg, hg_m, hg_d, trend(hg, hg_m)))
     print('t = {}, hg_delta = {:.3f}, hg_last = {:.3f}, 3hr={:.3f}  {}'.format(
         t * delay, hg_delta, hg_last, three_delta, alert))
+    dew = f - (0.36 * (100.0 - h))
+    print('dew: {}'.format(dew))
 
     # output to .csv file
     dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
