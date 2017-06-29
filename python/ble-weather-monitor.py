@@ -7,10 +7,11 @@ import math
 import time
 
 
-version = 0.9
+version = 0.97
 runningMeanLen = 1000
 # serialPort = 'COM3:'  # Windows 10
-serialPort = '/dev/cu.usbmodem1421'  # OS X El Capt.
+# serialPort = '/dev/cu.usbmodem1421'  # OS X El Capt. (RHS of Laptop)
+serialPort = '/dev/cu.usbmodem1411'  # OS X El Capt. (elgato)
 # serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
 
 
@@ -173,6 +174,8 @@ while True:
         hg, hg_m, hg_d, trend(hg, hg_m)))
     print('t = {}, hg_delta = {:.3f}, hg_last = {:.3f}, 3hr={:.3f}  {}'.format(
         t * delay, hg_delta, hg_last, three_delta, alert))
+    dew = f - (0.36 * (100.0 - h))
+    print('dew: {}'.format(dew))
 
     # output to .csv file
     dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
