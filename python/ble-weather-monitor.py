@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created : Thu 29 Jun 2017 01:57:08 PM EDT
-# Modified: Thu 29 Jun 2017 05:41:10 PM EDT
+# Modified: Thu 21 Jun 2018 03:16:23 PM EDT
 
 import better_exceptions
 import serial
@@ -17,8 +17,8 @@ from termcolor import cprint
 version = 0.98
 runningMeanLen = 1000
 # serialPort = 'COM3:'  # Windows 10
-serialPort = '/dev/cu.usbmodem1411'  # OS X El Capt. (elgato)
-# serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
+# serialPort = '/dev/cu.usbmodem1411'  # OS X El Capt. (elgato)
+serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
 
 pcolor = lambda color, arg: cprint(arg, color, attrs=['reverse'])
 

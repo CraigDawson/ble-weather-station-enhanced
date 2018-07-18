@@ -93,12 +93,14 @@ var app = {
 
     },
     onTemperatureChange: function(buffer) {
+        var today = new Date();
         var data = new Float32Array(buffer);
         var temperature = data[0];
         var temperatureF = temperature * 1.8 + 32;
         var message = temperature.toFixed(1) + "&deg;C<br/>" +
           temperatureF.toFixed(1) + "&deg;F<br/>";
         temperatureDiv.innerHTML = message;
+        document.getElementById('dtText').innerHTML=today; 
     },
     onHumidityChange: function(buffer) {
         var data = new Float32Array(buffer);
