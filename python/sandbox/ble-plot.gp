@@ -168,6 +168,6 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "blew2.csv"
-plot 'blew2.csv' using 1:5, '' using 1:14
+plot 'blew3.csv' using 1:5, '' using 1:14
 pause mouse "Click any mouse button on selected data point"
 #    EOF

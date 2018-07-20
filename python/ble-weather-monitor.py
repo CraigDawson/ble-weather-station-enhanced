@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created : Thu 29 Jun 2017 01:57:08 PM EDT
-# Modified: Wed 18 Jul 2018 05:41:44 PM EDT
+# Modified: Fri 20 Jul 2018 05:01:15 PM EDT
 
 import better_exceptions
 import serial
@@ -18,7 +18,7 @@ version = 0.99
 runningMeanLen = 100
 # serialPort = 'COM3:'  # Windows 10
 # serialPort = "/dev/cu.usbmodem1411"  # OS X El Capt. (elgato)
-serialPort = '/dev/ttyACM0'   # Linux Mint 17.3 Rosa
+serialPort = "/dev/ttyACM0"  # Linux Mint 17.3 Rosa
 
 """ Little color lambda function """
 pcolor = lambda color, arg: cprint(arg, color, attrs=["reverse"])
@@ -125,7 +125,7 @@ def main():
     alert = ""  # pressure change alert
     delay = 6  # 6 seconds between readings
     t = 0  # time counter (zeros every hour)
-    t2 = 0 # counts forever (roll over value??)
+    t2 = 0  # counts forever (roll over value??)
     hr = 0  # hour counter
     three_delta = 0.0  # three hour delta value
     three_last = 0.0  # last three hour delta value
@@ -231,16 +231,29 @@ def main():
         dew = f - (0.36 * (100.0 - h))
         print("dew: {}".format(dew))
 
-        # output to .csv file
-        fs = ""  # format string
-        for j in range(13):
-            fs += ',"{:.4f}"'
-        logger.info(
-            '"{}"'.format(dt)
-            + fs.format(
-                c, c_m, f, f_m, h, h_m, hg, hg_m, kpa, kpa_m, hg_delta, three_delta, dew
+        if t2 > 3:  # don't log 0 means
+            # output to .csv file
+            fs = ""  # format string
+            for j in range(13):
+                fs += ',"{:.4f}"'
+            logger.info(
+                '"{}"'.format(dt)
+                + fs.format(
+                    c,
+                    c_m,
+                    f,
+                    f_m,
+                    h,
+                    h_m,
+                    hg,
+                    hg_m,
+                    kpa,
+                    kpa_m,
+                    hg_delta,
+                    three_delta,
+                    dew,
+                )
             )
-        )
 
         time.sleep(delay)
 
