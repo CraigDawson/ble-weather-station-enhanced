@@ -1,0 +1,13 @@
+{
+  "name": "com.thebluetoothbook.weather",
+  "version": "0.0.1",
+  "displayName": "Weather",
+  "cordova": {
+    "platforms": [
+      "ios"
+    ]
+  },
+  "dependencies": {
+    "cordova-ios": "~4.5.4"
+  }
+}
