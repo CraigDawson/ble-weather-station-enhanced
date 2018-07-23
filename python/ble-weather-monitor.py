@@ -1,24 +1,48 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created : Thu 29 Jun 2017 01:57:08 PM EDT
-# Modified: Fri 20 Jul 2018 05:01:15 PM EDT
+# Modified: Mon 23 Jul 2018 05:45:13 PM EDT
 
 import better_exceptions
 import serial
 from collections import deque
 import logging
 from datetime import datetime
-from logging.handlers import RotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 import math
 import time
 from termcolor import cprint
-
 
 version = 0.99
 runningMeanLen = 100
 # serialPort = 'COM3:'  # Windows 10
 # serialPort = "/dev/cu.usbmodem1411"  # OS X El Capt. (elgato)
 serialPort = "/dev/ttyACM0"  # Linux Mint 17.3 Rosa
+
+
+class HeaderTimedRotatingFileHandler(TimedRotatingFileHandler):
+    """
+    Timed Rotating Log File Handler with Header for each rotated log file.
+    """
+    def __init__(self,
+                 filename,
+                 header=None,
+                 when='h',
+                 interval=1,
+                 backupCount=0,
+                 log=None):
+        self._header = header
+        self._log = log
+        super().__init__(filename, when, interval, backupCount)
+
+    def doRollover(self):
+        super().doRollover()
+        self.doHeader()
+
+    def doHeader(self):
+        if self._log is not None and self._header is not None:
+            self._log.info(self._header)
+
 
 """ Little color lambda function """
 pcolor = lambda color, arg: cprint(arg, color, attrs=["reverse"])
@@ -81,31 +105,42 @@ def trend(value, mean):
     return ind
 
 
+#----------------------------------------------------------------------
+def create_timed_rotating_log(path, header):
+    """"""
+    logger = logging.getLogger("Rotating Log")
+    logger.setLevel(logging.INFO)
+
+    handler = HeaderTimedRotatingFileHandler(
+        path, header, when="W6", interval=1, backupCount=5, log=logger)
+    logger.addHandler(handler)
+    return logger, handler
+
+
+#----------------------------------------------------------------------
+
+
 def main():
     """
     Creates a rotating log
     """
-    logger = logging.getLogger("Rotating Log")
-    logger.setLevel(logging.INFO)
+    hdr = '"Date & Time","°C","°C mean","°F","°F mean","H%","H% mean","inHg","inHg mean","kPa","kPa mean","Hg 1hr delta","Hg 3hr delta","Dew Point"'
 
-    # add a rotating handler
-    handler = RotatingFileHandler("ble-weather.csv", maxBytes=5000000, backupCount=5)
-    logger.addHandler(handler)
+    logger, handler = create_timed_rotating_log("ble-weather.csv", hdr)
+    handler.doHeader()  # Need to do initial header
+
+    logger.setLevel(logging.INFO)
 
     # error log
     elog = logging.getLogger(__name__)
+    elog.setLevel(logging.INFO)
     elog.info("BLE Weather Monitor V{}".format(version))
 
     ser = serial.Serial(serialPort, 9600)  # Needed for OS X
 
-    logger.info(
-        '"BLE Weather Monitor V{}",,"Running Mean Size:",{},,,,,,,,,,'.format(
-            version, runningMeanLen
-        )
-    )
-    logger.info(
-        '"Date & Time","°C","°C mean","°F","°F mean","H%","H% mean","inHg","inHg mean","kPa","kPa mean","Hg 1hr delta","Hg 3hr delta","Dew Point"'
-    )
+    pcolor(
+        'cyan', 'BLE Weather Monitor V{}    Running Mean Size: {}'.format(
+            version, runningMeanLen))
 
     # create circular buffers for running means
     celsius_cb = CircularBuffer(size=runningMeanLen)
@@ -114,7 +149,7 @@ def main():
     kilopascal_cb = CircularBuffer(size=runningMeanLen)
     inch_of_mercury_cb = CircularBuffer(size=runningMeanLen)
 
-    # throw out header from ardunio code
+    # throw out header from ardunio code  TODO: be smarter, eg, throw out until good data
     i = 2
     while i > 0:
         i -= 1
@@ -147,7 +182,8 @@ def main():
         c = float(c)  # celsius
         f = float(f)  # fahrenheit
         if c == 0.0 or f == 0.0:
-            msg = "{}: c={}, f={}, one or both zero, skipping...".format(dt, c, f)
+            msg = "{}: c={}, f={}, one or both zero, skipping...".format(
+                dt, c, f)
             elog.error(msg)
             pcolor("red", msg)
             continue
@@ -155,7 +191,7 @@ def main():
         kpa = float(pa) / 1000.0  # kilopascal
         hg = float(hg)  # inches of mercury
 
-        # mean and delta calculations  TODO: clean this up (ADT?, nested?)
+        # mean and delta calculations  TODO: clean this up (named tuples)
         c_m, c_d = 0.0, 0.0
         f_m, f_d = 0.0, 0.0
         h_m, h_d = 0.0, 0.0
@@ -198,36 +234,18 @@ def main():
                 alert = ""
 
         # output to console
-        print(
-            "C    = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
-                c, c_m, c_d, trend(c, c_m)
-            )
-        )
-        print(
-            "F    = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
-                f, f_m, f_d, trend(f, f_m)
-            )
-        )
-        print(
-            "h    = {:11.4f}% ({:11.4f}% {:11.4f} {})".format(
-                h, h_m, h_d, trend(h, h_m)
-            )
-        )
-        print(
-            "kPa  = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
-                kpa, kpa_m, kpa_d, trend(kpa, kpa_m)
-            )
-        )
-        print(
-            '"Hg  = {:11.4f}  ({:11.4f}  {:11.4f} {})'.format(
-                hg, hg_m, hg_d, trend(hg, hg_m)
-            )
-        )
-        print(
-            "t = {}, hg_delta = {:.3f}, hg_last = {:.3f}, 3hr={:.3f}  {}".format(
-                t * delay, hg_delta, hg_last, three_delta, alert
-            )
-        )
+        print("C    = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
+            c, c_m, c_d, trend(c, c_m)))
+        print("F    = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
+            f, f_m, f_d, trend(f, f_m)))
+        print("h    = {:11.4f}% ({:11.4f}% {:11.4f} {})".format(
+            h, h_m, h_d, trend(h, h_m)))
+        print("kPa  = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
+            kpa, kpa_m, kpa_d, trend(kpa, kpa_m)))
+        print('"Hg  = {:11.4f}  ({:11.4f}  {:11.4f} {})'.format(
+            hg, hg_m, hg_d, trend(hg, hg_m)))
+        print("t = {}, hg_delta = {:.3f}, hg_last = {:.3f}, 3hr={:.3f}  {}".
+              format(t * delay, hg_delta, hg_last, three_delta, alert))
         dew = f - (0.36 * (100.0 - h))
         print("dew: {}".format(dew))
 
@@ -236,24 +254,21 @@ def main():
             fs = ""  # format string
             for j in range(13):
                 fs += ',"{:.4f}"'
-            logger.info(
-                '"{}"'.format(dt)
-                + fs.format(
-                    c,
-                    c_m,
-                    f,
-                    f_m,
-                    h,
-                    h_m,
-                    hg,
-                    hg_m,
-                    kpa,
-                    kpa_m,
-                    hg_delta,
-                    three_delta,
-                    dew,
-                )
-            )
+            logger.info('"{}"'.format(dt) + fs.format(
+                c,
+                c_m,
+                f,
+                f_m,
+                h,
+                h_m,
+                hg,
+                hg_m,
+                kpa,
+                kpa_m,
+                hg_delta,
+                three_delta,
+                dew,
+            ))
 
         time.sleep(delay)
 
