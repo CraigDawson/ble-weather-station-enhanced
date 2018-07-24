@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created : Thu 29 Jun 2017 01:57:08 PM EDT
-# Modified: Mon 23 Jul 2018 05:45:13 PM EDT
+# Modified: Tue 24 Jul 2018 03:31:10 PM EDT
 
 import better_exceptions
 import serial
@@ -12,6 +12,7 @@ from logging.handlers import TimedRotatingFileHandler
 import math
 import time
 from termcolor import cprint
+from collections import namedtuple
 
 version = 0.99
 runningMeanLen = 100
@@ -24,6 +25,7 @@ class HeaderTimedRotatingFileHandler(TimedRotatingFileHandler):
     """
     Timed Rotating Log File Handler with Header for each rotated log file.
     """
+
     def __init__(self,
                  filename,
                  header=None,
@@ -124,7 +126,7 @@ def main():
     """
     Creates a rotating log
     """
-    hdr = '"Date & Time","°C","°C mean","°F","°F mean","H%","H% mean","inHg","inHg mean","kPa","kPa mean","Hg 1hr delta","Hg 3hr delta","Dew Point"'
+    hdr = '"Date & Time","°C","°C mean","°F","°F mean","H%","H% mean","inHg","inHg mean","kPa","kPa mean","Hg 1hr delta","Hg 3hr delta","Dew Point", "DP mean"'
 
     logger, handler = create_timed_rotating_log("ble-weather.csv", hdr)
     handler.doHeader()  # Need to do initial header
@@ -148,6 +150,7 @@ def main():
     humidity_cb = CircularBuffer(size=runningMeanLen)
     kilopascal_cb = CircularBuffer(size=runningMeanLen)
     inch_of_mercury_cb = CircularBuffer(size=runningMeanLen)
+    dew_point_cb = CircularBuffer(size=runningMeanLen)
 
     # throw out header from ardunio code  TODO: be smarter, eg, throw out until good data
     i = 2
@@ -190,19 +193,28 @@ def main():
         h = float(h)  # humidity
         kpa = float(pa) / 1000.0  # kilopascal
         hg = float(hg)  # inches of mercury
+        dew = f - (0.36 * (100.0 - h))
 
-        # mean and delta calculations  TODO: clean this up (named tuples)
-        c_m, c_d = 0.0, 0.0
-        f_m, f_d = 0.0, 0.0
-        h_m, h_d = 0.0, 0.0
-        kpa_m, kpa_d = 0.0, 0.0
-        hg_m, hg_d = 0.0, 0.0
+        # mean and delta calculations
+        StatData = namedtuple('StatData', ['mean', 'dev'])
+        stats = {
+            'celsius': StatData(0.0, 0.0),
+            'fahrenheit': StatData(0.0, 0.0),
+            'humidity': StatData(0.0, 0.0),
+            'kilopascal': StatData(0.0, 0.0),
+            'inchOfMercury': StatData(0.0, 0.0),
+            'dewPoint': StatData(0.0, 0.0),
+        }
         if t2 > 3:  # Need at least 3 reading to get mean & deviation from CB
-            c_m, c_d = celsius_cb.online_mean_deviation
-            f_m, f_d = fahrenheit_cb.online_mean_deviation
-            h_m, h_d = humidity_cb.online_mean_deviation
-            kpa_m, kpa_d = kilopascal_cb.online_mean_deviation
-            hg_m, hg_d = inch_of_mercury_cb.online_mean_deviation
+            stats['celsius'] = StatData(*celsius_cb.online_mean_deviation)
+            stats['fahrenheit'] = StatData(
+                *fahrenheit_cb.online_mean_deviation)
+            stats['humidity'] = StatData(*humidity_cb.online_mean_deviation)
+            stats['kilopascal'] = StatData(
+                *kilopascal_cb.online_mean_deviation)
+            stats['inchOfMercury'] = StatData(
+                *inch_of_mercury_cb.online_mean_deviation)
+            stats['dewPoint'] = StatData(*dew_point_cb.online_mean_deviation)
             # init last hg values
             if t2 == 4:  # After first averages then initialize other Hg's
                 hg_last = hg  # initial hg_last value
@@ -214,6 +226,7 @@ def main():
         humidity_cb.append(h)
         kilopascal_cb.append(kpa)
         inch_of_mercury_cb.append(hg)
+        dew_point_cb.append(dew)
 
         # check for hourly readings
         if t == 600:
@@ -235,40 +248,31 @@ def main():
 
         # output to console
         print("C    = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
-            c, c_m, c_d, trend(c, c_m)))
+            c, *stats['celsius'], trend(c, stats['celsius'].mean)))
         print("F    = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
-            f, f_m, f_d, trend(f, f_m)))
+            f, *stats['fahrenheit'], trend(f, stats['fahrenheit'].mean)))
         print("h    = {:11.4f}% ({:11.4f}% {:11.4f} {})".format(
-            h, h_m, h_d, trend(h, h_m)))
+            h, *stats['humidity'], trend(h, stats['humidity'].mean)))
         print("kPa  = {:11.4f}  ({:11.4f}  {:11.4f} {})".format(
-            kpa, kpa_m, kpa_d, trend(kpa, kpa_m)))
+            kpa, *stats['kilopascal'], trend(kpa, stats['kilopascal'].mean)))
         print('"Hg  = {:11.4f}  ({:11.4f}  {:11.4f} {})'.format(
-            hg, hg_m, hg_d, trend(hg, hg_m)))
+            hg, *stats['inchOfMercury'], trend(hg,
+                                               stats['inchOfMercury'].mean)))
+        print('"DP  = {:11.4f}  ({:11.4f}  {:11.4f} {})'.format(
+            dew, *stats['dewPoint'], trend(dew, stats['dewPoint'].mean)))
         print("t = {}, hg_delta = {:.3f}, hg_last = {:.3f}, 3hr={:.3f}  {}".
               format(t * delay, hg_delta, hg_last, three_delta, alert))
-        dew = f - (0.36 * (100.0 - h))
-        print("dew: {}".format(dew))
 
         if t2 > 3:  # don't log 0 means
             # output to .csv file
             fs = ""  # format string
-            for j in range(13):
+            for j in range(14):
                 fs += ',"{:.4f}"'
             logger.info('"{}"'.format(dt) + fs.format(
-                c,
-                c_m,
-                f,
-                f_m,
-                h,
-                h_m,
-                hg,
-                hg_m,
-                kpa,
-                kpa_m,
-                hg_delta,
-                three_delta,
-                dew,
-            ))
+                c, stats['celsius'].mean, f, stats['fahrenheit'].mean, h,
+                stats['humidity'].mean, hg, stats['inchOfMercury'].mean, kpa,
+                stats['kilopascal'].mean, hg_delta, three_delta, dew,
+                stats['dewPoint'].mean))
 
         time.sleep(delay)
 
