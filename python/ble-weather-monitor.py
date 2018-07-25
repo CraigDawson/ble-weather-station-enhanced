@@ -1,18 +1,19 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created : Thu 29 Jun 2017 01:57:08 PM EDT
-# Modified: Tue 24 Jul 2018 03:31:10 PM EDT
+# Modified: Wed 25 Jul 2018 04:21:06 PM EDT
 
-import better_exceptions
-import serial
-from collections import deque
 import logging
-from datetime import datetime
-from logging.handlers import TimedRotatingFileHandler
 import math
 import time
+from collections import deque, namedtuple
+from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
+
+import better_exceptions  # noqa: F401
 from termcolor import cprint
-from collections import namedtuple
+
+import serial
 
 version = 0.99
 runningMeanLen = 100
@@ -47,7 +48,7 @@ class HeaderTimedRotatingFileHandler(TimedRotatingFileHandler):
 
 
 """ Little color lambda function """
-pcolor = lambda color, arg: cprint(arg, color, attrs=["reverse"])
+pcolor = lambda color, arg: cprint(arg, color, attrs=["reverse"])   # noqa: E501, E731
 
 
 class CircularBuffer(deque):
@@ -74,7 +75,7 @@ class CircularBuffer(deque):
         for x in self:
             if x == 0:
                 msg = "CB datum is 0"
-                elog.error(msg)
+                # elog.error(msg)
                 pcolor("red", msg)
                 continue
             n += 1
@@ -107,7 +108,7 @@ def trend(value, mean):
     return ind
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 def create_timed_rotating_log(path, header):
     """"""
     logger = logging.getLogger("Rotating Log")
@@ -119,14 +120,14 @@ def create_timed_rotating_log(path, header):
     return logger, handler
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 
 def main():
     """
     Creates a rotating log
     """
-    hdr = '"Date & Time","°C","°C mean","°F","°F mean","H%","H% mean","inHg","inHg mean","kPa","kPa mean","Hg 1hr delta","Hg 3hr delta","Dew Point", "DP mean"'
+    hdr = '"Date & Time","°C","°C mean","°F","°F mean","H%","H% mean","inHg","inHg mean","kPa","kPa mean","Hg 1hr delta","Hg 3hr delta","Dew Point","DP mean"'  # noqa: 501
 
     logger, handler = create_timed_rotating_log("ble-weather.csv", hdr)
     handler.doHeader()  # Need to do initial header
@@ -152,7 +153,7 @@ def main():
     inch_of_mercury_cb = CircularBuffer(size=runningMeanLen)
     dew_point_cb = CircularBuffer(size=runningMeanLen)
 
-    # throw out header from ardunio code  TODO: be smarter, eg, throw out until good data
+    # throw out header from ardunio code
     i = 2
     while i > 0:
         i -= 1
@@ -167,44 +168,51 @@ def main():
     hr = 0  # hour counter
     three_delta = 0.0  # three hour delta value
     three_last = 0.0  # last three hour delta value
+    # Statistical data
+    StatData = namedtuple('StatData', ['mean', 'dev'])
+    stats = {
+        'celsius': StatData(0.0, 0.0),
+        'fahrenheit': StatData(0.0, 0.0),
+        'humidity': StatData(0.0, 0.0),
+        'kilopascal': StatData(0.0, 0.0),
+        'inchOfMercury': StatData(0.0, 0.0),
+        'dewPoint': StatData(0.0, 0.0),
+    }
+
     # main loop
     while True:
         dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         print("\n{}: {} / {}".format(dt, t, t2))
 
+        # read data from Ardunio
         raw = ser.readline()
         print("raw:{}".format(raw))
 
         # check for serial line error that translates to unpacking ValueError
         try:
             c, f, h, pa, hg = raw.decode().rstrip().split(",")
-        except (ValueError):
-            continue
 
-        c = float(c)  # celsius
-        f = float(f)  # fahrenheit
-        if c == 0.0 or f == 0.0:
-            msg = "{}: c={}, f={}, one or both zero, skipping...".format(
-                dt, c, f)
+            # Convert to floating point
+            c = float(c)  # celsius
+            f = float(f)  # fahrenheit
+            if c == 0.0 or f == 0.0:
+                msg = "{}: c={}, f={}, one or both zero, skipping...".format(
+                    dt, c, f)
+                elog.error(msg)
+                pcolor("red", msg)
+                continue
+            h = float(h)  # humidity
+            kpa = float(pa) / 1000.0  # kilopascal
+            hg = float(hg)  # inches of mercury
+            dew = f - (0.36 * (100.0 - h))
+        except (ValueError):
+            msg = 'ValueError getting data from Ardunio'
             elog.error(msg)
             pcolor("red", msg)
             continue
-        h = float(h)  # humidity
-        kpa = float(pa) / 1000.0  # kilopascal
-        hg = float(hg)  # inches of mercury
-        dew = f - (0.36 * (100.0 - h))
 
         # mean and delta calculations
-        StatData = namedtuple('StatData', ['mean', 'dev'])
-        stats = {
-            'celsius': StatData(0.0, 0.0),
-            'fahrenheit': StatData(0.0, 0.0),
-            'humidity': StatData(0.0, 0.0),
-            'kilopascal': StatData(0.0, 0.0),
-            'inchOfMercury': StatData(0.0, 0.0),
-            'dewPoint': StatData(0.0, 0.0),
-        }
         if t2 > 3:  # Need at least 3 reading to get mean & deviation from CB
             stats['celsius'] = StatData(*celsius_cb.online_mean_deviation)
             stats['fahrenheit'] = StatData(
@@ -229,7 +237,7 @@ def main():
         dew_point_cb.append(dew)
 
         # check for hourly readings
-        if t == 600:
+        if t == 600:  # 600 * 6s = 1hr
             t = 0
             hr += 1
             if hr == 3:
@@ -274,7 +282,7 @@ def main():
                 stats['kilopascal'].mean, hg_delta, three_delta, dew,
                 stats['dewPoint'].mean))
 
-        time.sleep(delay)
+        time.sleep(delay)  # 6 seconds
 
         t += 1
         t2 += 1
