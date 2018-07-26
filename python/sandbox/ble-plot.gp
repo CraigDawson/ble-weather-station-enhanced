@@ -41,7 +41,7 @@ set angles radians
 set tics back
 set grid nopolar
 set grid xtics nomxtics ytics nomytics noztics nomztics nortics nomrtics \
- nox2tics nomx2tics noy2tics nomy2tics nocbtics nomcbtics
+ nox2tics nomx2tics nomy2tics nocbtics nomcbtics
 set grid layerdefault   lt 0 linecolor 0 linewidth 0.500,  lt 0 linecolor 0 linewidth 0.500
 unset raxis
 set theta counterclockwise right
@@ -54,7 +54,7 @@ set key noopaque
 unset label
 unset arrow
 set style increment default
-unset style line
+#unset style line
 unset style arrow
 set style histogram clustered gap 2 title textcolor lt -1
 unset object
@@ -110,13 +110,15 @@ set ytics  norangelimit autofreq
 set ztics border in scale 1,0.5 nomirror norotate  autojustify
 set ztics  norangelimit autofreq 
 unset x2tics
-unset y2tics
+#unset y2tics
+set y2tics border in scale 1,0.5 nomirror norotate  autojustify
+set y2tics  norangelimit autofreq
 set cbtics border in scale 1,0.5 mirror norotate  autojustify
 set cbtics  norangelimit autofreq 
 set rtics axis in scale 1,0.5 nomirror norotate  autojustify
 set rtics  norangelimit autofreq 
 unset ttics
-set title "" 
+set title "BLE Weather Station Enhanced" 
 set title  font "" norotate
 set timestamp bottom 
 set timestamp "" 
@@ -130,10 +132,8 @@ set x2label ""
 set x2label  font "" textcolor lt -1 norotate
 set xrange [ * : * ] noreverse writeback
 set x2range [ * : * ] noreverse writeback
-set ylabel "" 
-set ylabel  font "" textcolor lt -1 rotate
-set y2label "" 
-set y2label  font "" textcolor lt -1 rotate
+set ylabel 'degrees' tc lt 1
+set y2label 'inHg' tc lt 2
 set yrange [ * : * ] noreverse writeback
 set y2range [ * : * ] noreverse writeback
 set zlabel "" 
@@ -167,7 +167,7 @@ set fontpath
 set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
-## Last datafile plotted: "blew2.csv"
-plot 'blew3.csv' using 1:5, '' using 1:14
+## Last datafile plotted: 
+plot 'ble-weather.csv' using 1:5 lw 3, '' using 1:15 lw 3, '' using 1:9 lw 3 axis x1y2
 pause mouse "Click any mouse button on selected data point"
 #    EOF
